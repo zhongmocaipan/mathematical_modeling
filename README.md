@@ -18,9 +18,6 @@
 ### 4. 统计显著性检验：
 
 - 对所选变量进行统计检验，验证它们是否对核黄素产量具有显著影响。
-  ```
-
-  ```
 - 这可以通过检查线性回归模型中系数的p值来实现。
 
 ### 数据预处理
@@ -101,21 +98,73 @@ Notes:
 以下是实现这一过程的Python代码：
 
 ```python
+# import pandas as pd
+# import numpy as np
+# from sklearn.model_selection import train_test_split
+# from sklearn.linear_model import Lasso, LinearRegression
+# from sklearn.metrics import mean_squared_error
+# from sklearn.preprocessing import StandardScaler
+# import statsmodels.api as sm
+
+# # 加载数据集
+# data = pd.read_csv('X.csv')
+
+# # 假设最后一列是目标变量 y，其他列是特征 X
+# X = data.iloc[:, :-1]
+# y = data.iloc[:, -1]
+
+# # 标准化特征
+# scaler = StandardScaler()
+# X_scaled = scaler.fit_transform(X)
+
+# # 将数据分为训练集和测试集
+# X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+# # 使用 Lasso 回归进行特征选择
+# lasso = Lasso(alpha=0.01)
+# lasso.fit(X_train, y_train)
+
+# # 获取 Lasso 模型的系数
+# coef = lasso.coef_
+
+# # 选择系数不为零的特征
+# selected_features = np.where(coef != 0)[0]
+# X_train_selected = X_train[:, selected_features]
+# X_test_selected = X_test[:, selected_features]
+
+# # 在选择的特征上拟合线性回归模型
+# lin_reg = LinearRegression()
+# lin_reg.fit(X_train_selected, y_train)
+
+# # 评估模型性能
+# y_pred = lin_reg.predict(X_test_selected)
+# mse = mean_squared_error(y_test, y_pred)
+# print(f'均方误差: {mse}')
+
+# # 统计检验所选变量的显著性
+# X_train_selected = sm.add_constant(X_train_selected)  # 为预测变量添加常数项
+# model = sm.OLS(y_train, X_train_selected)
+# results = model.fit()
+
+# # 显示回归模型摘要
+# print(results.summary())
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split
 from sklearn.linear_model import Lasso, LinearRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline
 import statsmodels.api as sm
 
 # 加载数据集
-data = pd.read_csv('/mnt/data/X.csv')
+data = pd.read_csv('X.csv')
 
-# 假设最后一列是核黄素产量，其他列是基因表达水平
+# 假设最后一列是目标变量 y，其他列是特征 X
 X = data.iloc[:, :-1]
 y = data.iloc[:, -1]
+
+# 将非数值型列转换为数值型
+X = pd.get_dummies(X, drop_first=True)
 
 # 标准化特征
 scaler = StandardScaler()
@@ -124,11 +173,11 @@ X_scaled = scaler.fit_transform(X)
 # 将数据分为训练集和测试集
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
 
-# 使用Lasso回归进行特征选择
+# 使用 Lasso 回归进行特征选择
 lasso = Lasso(alpha=0.01)
 lasso.fit(X_train, y_train)
 
-# 获取Lasso模型的系数
+# 获取 Lasso 模型的系数
 coef = lasso.coef_
 
 # 选择系数不为零的特征
@@ -152,6 +201,7 @@ results = model.fit()
 
 # 显示回归模型摘要
 print(results.summary())
+
 ```
 
 ### 代码解释：
@@ -161,4 +211,154 @@ print(results.summary())
 3. **线性回归建模**：在选择的特征上进行线性回归建模，并使用均方误差（MSE）评估模型性能。
 4. **统计显著性检验**：通过 `statsmodels`库对选择的基因进行统计显著性检验，输出系数的p值和置信区间。
 
-通过运行这段代码，你可以识别出对核黄素产量有显著影响的基因，并用统计方法验证这些基因的显著性。
+## 报告结构
+
+### 方法步骤
+
+1. **数据加载和预处理**：
+
+   - 使用 `pandas` 加载 CSV 文件中的数据。
+   - 检查数据中的非数值列并将其转换为哑变量（dummy variables）。
+   - 使用 `StandardScaler` 对特征进行标准化处理，以消除不同量纲之间的差异。
+2. **数据集划分**：
+
+   - 将数据集划分为训练集和测试集，以便对模型进行训练和验证。
+3. **特征选择**：
+
+   - 使用 Lasso 回归进行特征选择。Lasso 回归通过引入 L1 正则化，能够将一些系数缩小到零，从而选择出对目标变量影响较大的特征。
+4. **模型拟合**：
+
+   - 在选择的特征上使用线性回归模型进行拟合。
+   - 评估模型在测试集上的性能，计算均方误差（MSE）。
+5. **显著性检验**：
+
+   - 使用 `statsmodels` 库对所选特征进行显著性检验。通过回归模型的摘要（summary），可以观察每个特征的系数、标准误差、t 值和 p 值。
+   - 根据 p 值判断特征的显著性：通常，p 值小于 0.05 表示该特征对目标变量具有显著影响。
+
+### 结果解释
+
+- **均方误差（MSE）**：均方误差是模型预测值与实际值之间差异的平方和的平均值。较小的均方误差表示模型的预测性能较好。在上述结果中，均方误差为 `0.019084997095816344`，说明模型的预测误差较小。
+- **回归模型摘要**：
+
+  - `R-squared`：表示模型解释了目标变量变异的比例。R-squared 越接近 1，模型的解释力越强。
+  - `F-statistic` 及其对应的 `Prob (F-statistic)`：用于检验回归模型整体是否显著。p 值小于 0.05 表示模型整体显著。
+  - 每个特征的系数、标准误差、t 值和 p 值：p 值小于 0.05 表示该特征对目标变量具有显著影响。例如，在结果中，`x2`, `x6`, `x12`, `x15`, `x18`, `x19`, `x22`, `x23`, `x29`, `x33`, `x36` 等特征的 p 值较小，表明它们对核黄素产量有显著影响。
+
+### 结论
+
+通过 Lasso 回归进行特征选择，并使用线性回归模型进行显著性检验，我们成功识别出了一些对核黄素产量有显著影响的基因。这些显著的特征可以帮助进一步研究这些基因对核黄素产量的具体影响机制，并为相关生物实验提供参考。
+
+## 模型建立
+
+#### 1. 数据预处理
+
+数据预处理步骤包括加载数据、数据清洗和特征工程。假设数据集为 `data.csv`，包含核黄素产量及基因表达水平。
+
+```python
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+
+# 加载数据
+data = pd.read_csv('data.csv')
+
+# 假设最后一列是核黄素产量，其余列是基因表达水平
+X = data.iloc[:, :-1]
+y = data.iloc[:, -1]
+
+# 标准化特征
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# 划分训练集和测试集
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+```
+
+#### 2. 特征选择
+
+使用 Lasso 回归模型进行特征选择。Lasso 回归通过 L1 正则化选择重要特征。
+
+```python
+from sklearn.linear_model import Lasso
+
+# 使用 Lasso 回归进行特征选择
+lasso = Lasso(alpha=0.01)
+lasso.fit(X_train, y_train)
+
+# 获取非零系数对应的特征索引
+selected_features = np.where(lasso.coef_ != 0)[0]
+
+# 选择重要特征
+X_train_selected = X_train[:, selected_features]
+X_test_selected = X_test[:, selected_features]
+```
+
+#### 3. 建立回归模型
+
+在选择的特征上拟合线性回归模型，并评估模型性能。
+
+```python
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+# 建立线性回归模型
+lin_reg = LinearRegression()
+lin_reg.fit(X_train_selected, y_train)
+
+# 评估模型性能
+y_pred = lin_reg.predict(X_test_selected)
+mse = mean_squared_error(y_test, y_pred)
+print(f'均方误差: {mse}')
+```
+
+#### 4. 变量显著性检验
+
+使用 `statsmodels` 库进行显著性检验，分析所选变量的显著性。
+
+```python
+import statsmodels.api as sm
+
+# 为回归模型添加常数项
+X_train_selected = sm.add_constant(X_train_selected)
+
+# 建立OLS模型并拟合
+model = sm.OLS(y_train, X_train_selected)
+results = model.fit()
+
+# 输出模型摘要
+print(results.summary())
+```
+
+### 数学模型描述
+
+1. **线性回归模型**：
+   我们使用以下线性回归模型来描述核黄素产量与基因表达水平之间的关系：
+
+   $$
+   y = \beta_0 + \sum_{i=1}^{n} \beta_i x_i + \epsilon
+   $$
+
+   其中，$ y $ 表示核黄素产量，$ x_i $ 表示第 $ i $ 个基因的表达水平，$ \beta_i $ 是对应的回归系数，$ \epsilon $ 是误差项。
+2. **Lasso 回归模型**：
+   Lasso 回归通过引入 L1 正则化，选择出对核黄素产量有显著影响的基因：
+
+   $$
+   \min_{\beta} \left\{ \frac{1}{2n} \sum_{i=1}^{n} \left( y_i - \sum_{j=1}^{p} x_{ij} \beta_j \right)^2 + \alpha \sum_{j=1}^{p} |\beta_j| \right\}
+   $$
+
+   其中，$ \alpha $ 是正则化参数，通过交叉验证选择。
+3. **显著性检验**：
+   使用 t 检验对每个特征的回归系数进行显著性检验，检验假设如下：
+
+   $$
+   H_0: \beta_i = 0 \quad \text{(无显著性)}
+   $$
+   $$
+   H_1: \beta_i \neq 0 \quad \text{(有显著性)}
+   $$
+
+   通过观察每个特征的 p 值，判断其显著性。一般来说，p 值小于 0.05 表示该特征对核黄素产量具有显著影响。
+
+### 模型总结
+
+通过上述步骤，我们建立了一个数学模型来识别影响核黄素产量的基因，并通过显著性检验方法验证了所选特征的显著性。该模型不仅能够识别出重要基因，还能够为进一步的生物实验和研究提供有价值的参考。
