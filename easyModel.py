@@ -71,7 +71,7 @@ scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
 # 将数据分为训练集和测试集
-X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=72)
 
 # 使用 Lasso 回归进行特征选择
 lasso = Lasso(alpha=0.01)
